@@ -26,7 +26,7 @@ while True:
             pygame.quit()
             sys.exit()
 
-    now = datetime.now()
+    now = datetime.datetime.now()
     minute = now.minute
     second = now.second
 
