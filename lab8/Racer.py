@@ -22,6 +22,7 @@ SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
 SPEED = 5
 SCORE = 0
+COINS = 0  # Счётчик собранных монет
 
 #Setting up Fonts
 font = pygame.font.SysFont("Verdana", 60)
@@ -50,6 +51,22 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.top = 0
             self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
 
+class Coin(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load("coin.png")
+        self.image = pygame.transform.scale(self.image, (30, 30))
+        self.rect = self.image.get_rect()
+        self.rect.center = (random.randint(30, SCREEN_WIDTH - 30), 0)  # Появляется сверху
+
+    def move(self):
+        self.rect.move_ip(0, SPEED)  # Двигается вниз со скоростью, как враг
+        if self.rect.top > SCREEN_HEIGHT:  # Если вышла за экран
+            self.respawn()  # Перезапустить сверху
+
+    def respawn(self):
+        self.rect.center = (random.randint(30, SCREEN_WIDTH - 30), 0)  # Снова сверху
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -75,6 +92,7 @@ class Player(pygame.sprite.Sprite):
 #Setting up Sprites        
 P1 = Player()
 E1 = Enemy()
+C1 = Coin()
 
 #Creating Sprites Groups
 enemies = pygame.sprite.Group()
@@ -82,6 +100,9 @@ enemies.add(E1)
 all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
 all_sprites.add(E1)
+all_sprites.add(C1)
+coins = pygame.sprite.Group()
+coins.add(C1)
 
 #Adding a new User event 
 INC_SPEED = pygame.USEREVENT + 1
@@ -100,13 +121,19 @@ while True:
 
     DISPLAYSURF.blit(background, (0,0))
     scores = font_small.render(str(SCORE), True, BLACK)
+    coins_display = font_small.render("Coins: " + str(COINS), True, BLACK)
     DISPLAYSURF.blit(scores, (10,10))
+    DISPLAYSURF.blit(coins_display, (SCREEN_WIDTH - 100, 10))  # Правый верхний угол
 
     #Moves and Re-draws all Sprites
     for entity in all_sprites:
         DISPLAYSURF.blit(entity.image, entity.rect)
         entity.move()
-
+    # Если игрок собрал монету
+    if pygame.sprite.spritecollideany(P1, coins):
+        COINS += 1
+        C1.respawn()
+        
     #To be run if collision occurs between Player and Enemy
     if pygame.sprite.spritecollideany(P1, enemies):
           pygame.mixer.Sound('crash.wav').play()
